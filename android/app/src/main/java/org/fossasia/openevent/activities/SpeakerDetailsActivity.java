@@ -239,7 +239,7 @@ public class SpeakerDetailsActivity extends BaseActivity {
 
             @Override
             public void onPrepareLoad(Drawable placeHolderDrawable) {
-
+                //This method is intentionally empty, because it is required to use Target, which is abstract
             }
         };
 
