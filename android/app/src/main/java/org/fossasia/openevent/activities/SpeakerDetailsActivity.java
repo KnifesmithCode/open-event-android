@@ -1,5 +1,7 @@
 package org.fossasia.openevent.activities;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -7,6 +9,9 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsCallback;
+import android.support.customtabs.CustomTabsClient;
+import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.content.ContextCompat;
@@ -52,6 +57,8 @@ public class SpeakerDetailsActivity extends BaseActivity {
     private List<Session> mSessions;
 
     private String speaker;
+
+    private CustomTabsClient customTabsClient;
 
     @BindView(R.id.toolbar_speakers) Toolbar toolbar;
     @BindView(R.id.txt_no_sessions) TextView noSessionsView;
@@ -105,8 +112,34 @@ public class SpeakerDetailsActivity extends BaseActivity {
 
         speakerName.setText(selectedSpeaker.getName());
         speakerDesignation.setText(String.format("%s%s", selectedSpeaker.getPosition(), selectedSpeaker.getOrganisation()));
+        boolean customTabsSupported;
+        CustomTabsServiceConnection customTabsServiceConnection;
+        Intent customTabIntent = new Intent("android.support.customtabs.action.CustomTabsService");
+        customTabIntent.setPackage("com.android.chrome");
+        customTabsServiceConnection = new CustomTabsServiceConnection() {
+            @Override
+            public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
+                customTabsClient = client;
+                customTabsClient.warmup(0L);
+            }
 
-        final SpeakerIntent speakerIntent = new SpeakerIntent(selectedSpeaker);
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                //do nothing
+            }
+        };
+        customTabsSupported = bindService(customTabIntent, customTabsServiceConnection, Context.BIND_AUTO_CREATE);
+
+        final SpeakerIntent speakerIntent;
+        if (customTabsClient != null)
+        {
+            speakerIntent = new SpeakerIntent(selectedSpeaker, getApplicationContext(), this,
+                    customTabsClient.newSession(new CustomTabsCallback()), customTabsSupported);
+        }
+        else
+        {
+            speakerIntent = new SpeakerIntent(selectedSpeaker, getApplicationContext(), this, customTabsSupported);
+        }
 
         if (!TextUtils.isEmpty(selectedSpeaker.getLinkedin())) {
             speakerIntent.clickedImage(linkedin);
