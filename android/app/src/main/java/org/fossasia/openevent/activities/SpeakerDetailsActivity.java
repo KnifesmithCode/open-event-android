@@ -292,6 +292,9 @@ public class SpeakerDetailsActivity extends BaseActivity {
 
         Drawable backDrawable = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_arrow_back_white_24dp);
         backDrawable.clearColorFilter();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         unbindService(customTabsServiceConnection);
